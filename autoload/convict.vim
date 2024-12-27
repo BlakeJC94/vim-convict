@@ -34,35 +34,43 @@ function! convict#Commit() abort
     return ''
   endif
 
-  let l:file_changes = []
   let l:numstat = systemlist('git diff --staged --numstat')
-  if !empty(l:numstat)
-    " Loop through each line of the output
-    for line in l:numstat
-      " Split the line into columns (added, removed, filename)
-      let l:parts = split(line, '\t', 3)
+  let l:file_changes = {}
+  let l:dir_changes = {}
+  for line in l:numstat
+    let [added, deleted, filepath] = split(line, '\s\+', 1)
+    let changes = str2nr(added) + str2nr(deleted)
 
-      " Ensure the line has 3 parts (added, removed, filename)
-      if len(l:parts) == 3
-        let l:added = str2nr(l:parts[0])
-        let l:removed = str2nr(l:parts[1])
-        let l:filename = l:parts[2]
+    " Handle file renames (e.g., 'path1 => path2')
+    if match(filepath, '=>') != -1
+      let filepath = substitute(filepath, '.* => \(.*\)', '\1', 'g')
+    endif
 
-        " Handle the case of a file rename (e.g., 'path1 => path2')
-        if match(l:filename, '=>') != -1
-          let l:filename = substitute(l:filename, '.* => \(.*\)', '\1', 'g')
-        endif
+    " Add changes to the file
+    let l:file_changes[filepath] = get(l:file_changes, filepath, 0) + changes
 
-        let l:total = l:added + l:removed
-        call add(l:file_changes, {'filename': l:filename, 'total': l:total})
-      endif
-    endfor
-  endif
-  call sort(l:file_changes, {a, b -> b['total'] - a['total']})
+    " Aggregate changes for directories
+    let dir = fnamemodify(filepath, ':h')
+    if dir != ""
+      let l:dir_changes[dir] = get(l:dir_changes, dir, 0) + changes
+    endif
+  endfor
+
+  " Combine files and directories into a single list
+  let l:combined_changes = []
+  for [name, changes] in items(l:file_changes)
+    call add(l:combined_changes, {'filename': name, 'total': changes})
+  endfor
+  for [name, changes] in items(l:dir_changes)
+    call add(l:combined_changes, {'filename': name, 'total': changes})
+  endfor
+
+  " Sort by total changes in descending order
+  call sort(l:combined_changes, {a, b -> b['total'] - a['total']})
 
   let l:scope_options = []
   let l:counter = 1
-  for item in l:file_changes
+  for item in l:combined_changes
     let l:filename = item['filename']
     let l:filename = fnamemodify(item['filename'], ':t')
     let l:filename = substitute(l:filename, '^\.', '', '')
@@ -70,7 +78,7 @@ function! convict#Commit() abort
     let l:numbered_filename = printf("%d. %s", l:counter, l:filename)
     call add(l:scope_options, l:numbered_filename)
     let l:counter += 1
-    if l:counter > 5
+    if l:counter > 9
       break
     endif
   endfor
