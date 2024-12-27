@@ -63,6 +63,7 @@ the `dev` branch, which will periodically be merged into `main`.
 - [x] Establish plugin structure
 - [x] Add code
 - [ ] Aggregate changes over directories
+- [ ] Refactor
 - [ ] Customizable mappings
 - [ ] Version bumping with template support
 
