@@ -3,4 +3,4 @@ if exists("b:did_ftplugin")
 endif
 let b:did_ftplugin = 1
 
-nnoremap <silent> <buffer> <CR>  i<C-r>=<sid>convict#Commit()<CR>
+nnoremap <silent> <buffer> <CR>  i<C-r>=convict#Commit()<CR>
