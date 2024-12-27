@@ -54,6 +54,16 @@ Plug 'tpope/vim-fugitive'
 Plug 'BlakeJC94/vim-convict'
 ```
 
+The default commit menu mapping is `<CR>`, which is only active at the start of buffers with the
+`gitcommit` filetype. If you would like to customize this mapping, set
+```
+let g:convict_disable_default_map = 1
+```
+in your `vimrc`, and add this mapping to `~/.vim/ftplugin/gitcommit.vim`:
+```
+nmap <silent> <buffer> <your-map-here> <Plug>(convict-commit)
+```
+
 ## Issues
 If any errors are encountered (or you would like to make a feature request), raise an issue on the
 repository so we can discuss. Pull requests are also welcomed
@@ -68,7 +78,7 @@ the `dev` branch, which will periodically be merged into `main`.
 - [x] Add code
 - [x] Aggregate changes over directories
 - [ ] Refactor
-- [ ] Customizable mappings
+- [x] Customizable mappings
 - [ ] Version bumping with template support
 
 ## Licence

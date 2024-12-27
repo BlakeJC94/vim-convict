@@ -3,4 +3,6 @@ if exists("b:did_ftplugin")
 endif
 let b:did_ftplugin = 1
 
-nnoremap <silent> <buffer> <CR>  i<C-r>=convict#Commit()<CR>
+if !exists("g:convict_disable_default_map")
+  nmap <silent> <buffer> <CR> <Plug>(convict-commit)
+endif
