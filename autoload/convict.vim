@@ -15,12 +15,12 @@ function! convict#Commit() abort
         \'1. fix: A bug fix. Correlates with PATCH in SemVer',
         \'2. feat: A new feature. Correlates with MINOR in SemVer',
         \'3. docs: Documentation only changes',
-        \'4. style: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)',
+        \'4. style: Changes that do not affect the meaning of the code',
         \'5. refactor: A code change that neither fixes a bug nor adds a feature',
         \'6. perf: A code change that improves performance',
         \'7. test: Adding missing or correcting existing tests',
-        \'8. build: Changes that affect the build system or external dependencies (example scopes: pip, docker, npm)',
-        \'9. ci: Changes to CI configuration files and scripts (example scopes: GitLabCI)',
+        \'8. build: Changes that affect the build system or external dependencies',
+        \'9. ci: Changes to CI configuration files and scripts',
         \]
 
   let l:type_choice = inputlist(['Choose commit type:'] + l:type_options)
@@ -77,7 +77,7 @@ function! convict#Commit() abort
 
   " Get the user's input from the scope dialog
   execute 'redraw'
-  let l:scope_choice = inputlist(['Add scope (0. or <Enter> for custom):'] + l:scope_options)
+  let l:scope_choice = inputlist(['Add scope (<Enter> for custom or skip):'] + l:scope_options)
   let l:scope = ""
   if l:scope_choice > 0
     let l:scope = strpart(l:scope_options[l:scope_choice - 1], 3)
@@ -91,8 +91,9 @@ function! convict#Commit() abort
   endif
 
   " Get the user's choice from the breaking change confirm dialog
+  execute 'redraw'
   let l:break_options = ["&Yes", "&No"]
-  let l:break_choice = confirm('Breaking change?', join(l:break_options, "\n"), &ic ? 0 : 4)
+  let l:break_choice = confirm('Breaking change? (<Enter> for No)', join(l:break_options, "\n"), &ic ? 0 : 4)
   " Check if a valid choice was made (non-zero index)
   if l:break_choice == 1
     let l:commit_msg = l:commit_msg . '!'
