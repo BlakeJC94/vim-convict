@@ -18,7 +18,7 @@ Choose commit type:
 9. ci: Changes to CI configuration files and scripts (example scopes: GitLabCI)
 Type number and <Enter> or click with the mouse (q or empty cancels): 1
 
-Add scope (0. or <Enter> for custom):
+Add scope (<Enter> for custom or skip):
 1. foo
 2. bar
 3. baz
@@ -26,7 +26,7 @@ Type number and <Enter> or click with the mouse (q or empty cancels): 0
 
 Add custom scope (<Enter> to skip): floob
 
-Breaking change?
+Breaking change? (<Enter> for No)
 (Y)es, (N)o: Y
 ```
 
@@ -60,9 +60,9 @@ the `dev` branch, which will periodically be merged into `main`.
 
 ### TODO
 - [x] Readme v1
-- [ ] Establish plugin structure
-- [ ] Add code
-- [ ] Add docs
+- [x] Establish plugin structure
+- [x] Add code
+- [ ] Aggregate changes over directories
 - [ ] Customizable mappings
 - [ ] Version bumping with template support
 
