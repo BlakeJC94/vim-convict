@@ -54,6 +54,10 @@ Plug 'tpope/vim-fugitive'
 Plug 'BlakeJC94/vim-convict'
 ```
 
+## Issues
+If any errors are encountered (or you would like to make a feature request), raise an issue on the
+repository so we can discuss. Pull requests are also welcomed
+
 ## Development
 The `main` branch is reserved for releases and should be considered stable. Changes should occur in
 the `dev` branch, which will periodically be merged into `main`.
@@ -62,7 +66,7 @@ the `dev` branch, which will periodically be merged into `main`.
 - [x] Readme v1
 - [x] Establish plugin structure
 - [x] Add code
-- [ ] Aggregate changes over directories
+- [x] Aggregate changes over directories
 - [ ] Refactor
 - [ ] Customizable mappings
 - [ ] Version bumping with template support
