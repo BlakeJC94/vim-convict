@@ -3,8 +3,8 @@ Conventional commits for [`fugitive.vim`]()
 
 ## Usage
 When opening the commit editor in `fugitive.vim`, Use `<CR>` in normal mode at the beginning of the
-buffer to start a menu to select the commit type, scope, and indicate if a breaking change
-has occurred:
+buffer to start a menu to select the commit type, scope (ranked in order of number of changes), and
+indicate if a breaking change has occurred:
 ```
 Choose commit type:
 1. fix: A bug fix. Correlates with PATCH in SemVer
