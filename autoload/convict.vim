@@ -75,6 +75,9 @@ function! convict#Commit() abort
     let l:filename = fnamemodify(item['filename'], ':t')
     let l:filename = substitute(l:filename, '^\.', '', '')
     let l:filename = substitute(l:filename, '\..\+$', '', '')
+    if l:filename == ""
+      continue
+    endif
     let l:numbered_filename = printf("%d. %s", l:counter, l:filename)
     call add(l:scope_options, l:numbered_filename)
     let l:counter += 1
