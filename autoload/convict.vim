@@ -23,7 +23,7 @@ function! convict#Commit() abort
         \'9. ci: Changes to CI configuration files and scripts',
         \]
 
-  let l:type_choice = inputlist(['Choose commit type:'] + l:type_options)
+  let l:type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + l:type_options)
   " Check if a valid choice was made (non-zero index)
   if l:type_choice > 0
     " Return the selected commit type
