@@ -29,8 +29,7 @@ function! s:SelectType(type_options) abort
   return commit_type
 endfunction
 
-
-function! s:SelectScope() abort
+function! s:GetScopeOptions() abort
   let numstat = systemlist('git diff --staged --numstat')
   let file_changes = {}
   let dir_changes = {}
@@ -82,13 +81,17 @@ function! s:SelectScope() abort
       break
     endif
   endfor
+  return scope_options
+endfunction
 
+
+function! s:SelectScope(scope_options) abort
   " Get the user's input from the scope dialog
   execute 'redraw'
-  let scope_choice = inputlist(['Add scope (<Enter> for custom or skip):'] + scope_options)
+  let scope_choice = inputlist(['Add scope (<Enter> for custom or skip):'] + a:scope_options)
   let scope = ""
   if scope_choice > 0
-    let scope = strpart(scope_options[scope_choice - 1], 3)
+    let scope = strpart(a:scope_options[scope_choice - 1], 3)
   else
     let scope = input('Add custom scope (<Enter> to skip): ', "")
   endif
@@ -107,7 +110,8 @@ function! convict#Commit() abort
   end
   let commit_msg = commit_type
 
-  let scope = s:SelectScope()
+  let scope_options = s:GetScopeOptions()
+  let scope = s:SelectScope(scope_options)
   if scope != ""
     let commit_msg = commit_msg . '(' . scope . ')'
   endif
