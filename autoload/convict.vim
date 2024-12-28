@@ -3,6 +3,18 @@ if exists('g:autoloaded_convict')
 endif
 let g:autoloaded_convict = 1
 
+let s:type_options = [
+      \'1. fix: A bug fix. Correlates with PATCH in SemVer',
+      \'2. feat: A new feature. Correlates with MINOR in SemVer',
+      \'3. docs: Documentation only changes',
+      \'4. style: Changes that do not affect the meaning of the code',
+      \'5. refactor: A code change that neither fixes a bug nor adds a feature',
+      \'6. perf: A code change that improves performance',
+      \'7. test: Adding missing or correcting existing tests',
+      \'8. build: Changes that affect the build system or external dependencies',
+      \'9. ci: Changes to CI configuration files and scripts',
+      \]
+
 function! convict#Commit() abort
   if !(line('.') ==# 1 && col('.') ==# 1)
     return ''
@@ -11,17 +23,6 @@ function! convict#Commit() abort
   let l:commit_msg = ''
 
   " Get the user's choice from the type confirm dialog
-  let l:type_options = [
-        \'1. fix: A bug fix. Correlates with PATCH in SemVer',
-        \'2. feat: A new feature. Correlates with MINOR in SemVer',
-        \'3. docs: Documentation only changes',
-        \'4. style: Changes that do not affect the meaning of the code',
-        \'5. refactor: A code change that neither fixes a bug nor adds a feature',
-        \'6. perf: A code change that improves performance',
-        \'7. test: Adding missing or correcting existing tests',
-        \'8. build: Changes that affect the build system or external dependencies',
-        \'9. ci: Changes to CI configuration files and scripts',
-        \]
 
   let l:type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + l:type_options)
   " Check if a valid choice was made (non-zero index)
