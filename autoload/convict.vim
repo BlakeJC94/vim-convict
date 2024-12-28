@@ -16,14 +16,14 @@ let s:type_options = [
       \]
 
 
-function! s:SelectType() abort
+function! s:SelectType(type_options) abort
   let commit_type = ''
   " Get the user's choice from the type confirm dialog
-  let type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + s:type_options)
+  let type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + a:type_options)
   " Check if a valid choice was made (non-zero index)
   if type_choice > 0
     " Return the selected commit type
-    let commit_type = s:type_options[type_choice - 1]
+    let commit_type = a:type_options[type_choice - 1]
     let commit_type = substitute(commit_type, '\d\+\.\s\(\w\+\):.*', '\1', "")
   endif
   return commit_type
@@ -101,7 +101,7 @@ function! convict#Commit() abort
     return ''
   endif
 
-  let commit_type = s:SelectType()
+  let commit_type = s:SelectType(s:type_options)
   if commit_type == ''
     return ''
   end
@@ -112,11 +112,9 @@ function! convict#Commit() abort
     let commit_msg = commit_msg . '(' . scope . ')'
   endif
 
-  " Get the user's choice from the breaking change confirm dialog
   execute 'redraw'
   let break_options = ["&Yes", "&No"]
   let break_choice = confirm('Breaking change? (<Enter> for No)', join(break_options, "\n"), &ic ? 0 : 4)
-  " Check if a valid choice was made (non-zero index)
   if break_choice == 1
     let commit_msg = commit_msg . '!'
   endif
