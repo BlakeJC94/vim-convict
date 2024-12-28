@@ -15,24 +15,31 @@ let s:type_options = [
       \'9. ci: Changes to CI configuration files and scripts',
       \]
 
-function! convict#Commit() abort
-  if !(line('.') ==# 1 && col('.') ==# 1)
-    return ''
-  endif
 
-  let commit_msg = ''
-
+function! s:SelectCommitType() abort
+  let commit_type = ''
   " Get the user's choice from the type confirm dialog
   let type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + s:type_options)
   " Check if a valid choice was made (non-zero index)
   if type_choice > 0
     " Return the selected commit type
-    let commit_type = substitute(s:type_options[type_choice - 1], '\d\+\.\s\(\w\+\):.*', '\1', "")
-    let commit_msg = commit_msg . commit_type
-  else
-    " Cancel if no commit type is selected
+    let commit_type = s:type_options[type_choice - 1]
+    let commit_type = substitute(commit_type, '\d\+\.\s\(\w\+\):.*', '\1', "")
+  endif
+  return commit_type
+endfunction
+
+
+function! convict#Commit() abort
+  if !(line('.') ==# 1 && col('.') ==# 1)
     return ''
   endif
+
+  let commit_type = s:SelectCommitType()
+  if commit_type == ''
+    return ''
+  end
+  let commit_msg = commit_type
 
   let numstat = systemlist('git diff --staged --numstat')
   let file_changes = {}
