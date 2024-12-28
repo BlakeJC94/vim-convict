@@ -30,17 +30,7 @@ function! s:SelectCommitType() abort
 endfunction
 
 
-function! convict#Commit() abort
-  if !(line('.') ==# 1 && col('.') ==# 1)
-    return ''
-  endif
-
-  let commit_type = s:SelectCommitType()
-  if commit_type == ''
-    return ''
-  end
-  let commit_msg = commit_type
-
+function! s:SelectScope() abort
   let numstat = systemlist('git diff --staged --numstat')
   let file_changes = {}
   let dir_changes = {}
@@ -102,8 +92,22 @@ function! convict#Commit() abort
   else
     let scope = input('Add custom scope (<Enter> to skip): ', "")
   endif
+  return scope
+endfunction
 
-  " Check if a valid choice was made (non-zero index)
+
+function! convict#Commit() abort
+  if !(line('.') ==# 1 && col('.') ==# 1)
+    return ''
+  endif
+
+  let commit_type = s:SelectCommitType()
+  if commit_type == ''
+    return ''
+  end
+  let commit_msg = commit_type
+
+  let scope = s:SelectScope()
   if scope != ""
     let commit_msg = commit_msg . '(' . scope . ')'
   endif
