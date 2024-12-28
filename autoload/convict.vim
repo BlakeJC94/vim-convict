@@ -20,6 +20,7 @@ function! s:SelectType(type_options) abort
   let commit_type = ''
   " Get the user's choice from the type confirm dialog
   let type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + a:type_options)
+  execute 'redraw'
   " Check if a valid choice was made (non-zero index)
   if type_choice > 0
     " Return the selected commit type
@@ -91,8 +92,8 @@ endfunction
 
 
 function! s:SelectScope(scope_options) abort
-  execute 'redraw'
   let scope_choice = inputlist(['Add scope (<Enter> for custom or skip):'] + a:scope_options)
+  execute 'redraw'
   let scope = ""
   if scope_choice > 0
     let scope = strpart(a:scope_options[scope_choice - 1], 3)
@@ -122,7 +123,6 @@ function! convict#Commit() abort
     let commit_msg = commit_msg . '(' . scope . ')'
   endif
 
-  execute 'redraw'
   let break_options = ["&Yes", "&No"]
   let break_choice = confirm('Breaking change? (<Enter> for No)', join(break_options, "\n"), &ic ? 0 : 4)
   if break_choice == 1
