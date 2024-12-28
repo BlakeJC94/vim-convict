@@ -20,25 +20,24 @@ function! convict#Commit() abort
     return ''
   endif
 
-  let l:commit_msg = ''
+  let commit_msg = ''
 
   " Get the user's choice from the type confirm dialog
-
-  let l:type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + l:type_options)
+  let type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + s:type_options)
   " Check if a valid choice was made (non-zero index)
-  if l:type_choice > 0
+  if type_choice > 0
     " Return the selected commit type
-    let l:commit_type = substitute(l:type_options[l:type_choice - 1], '\d\+\.\s\(\w\+\):.*', '\1', "")
-    let l:commit_msg = l:commit_msg . l:commit_type
+    let commit_type = substitute(s:type_options[type_choice - 1], '\d\+\.\s\(\w\+\):.*', '\1', "")
+    let commit_msg = commit_msg . commit_type
   else
     " Cancel if no commit type is selected
     return ''
   endif
 
-  let l:numstat = systemlist('git diff --staged --numstat')
-  let l:file_changes = {}
-  let l:dir_changes = {}
-  for line in l:numstat
+  let numstat = systemlist('git diff --staged --numstat')
+  let file_changes = {}
+  let dir_changes = {}
+  for line in numstat
     let [added, deleted, filepath] = split(line, '\s\+', 1)
     let changes = str2nr(added) + str2nr(deleted)
 
@@ -48,69 +47,69 @@ function! convict#Commit() abort
     endif
 
     " Add changes to the file
-    let l:file_changes[filepath] = get(l:file_changes, filepath, 0) + changes
+    let file_changes[filepath] = get(file_changes, filepath, 0) + changes
 
     " Aggregate changes for directories
     let dir = fnamemodify(filepath, ':h')
     if dir != ""
-      let l:dir_changes[dir] = get(l:dir_changes, dir, 0) + changes
+      let dir_changes[dir] = get(dir_changes, dir, 0) + changes
     endif
   endfor
 
   " Combine files and directories into a single list
-  let l:combined_changes = []
-  for [name, changes] in items(l:file_changes)
-    call add(l:combined_changes, {'filename': name, 'total': changes})
+  let combined_changes = []
+  for [name, changes] in items(file_changes)
+    call add(combined_changes, {'filename': name, 'total': changes})
   endfor
-  for [name, changes] in items(l:dir_changes)
-    call add(l:combined_changes, {'filename': name, 'total': changes})
+  for [name, changes] in items(dir_changes)
+    call add(combined_changes, {'filename': name, 'total': changes})
   endfor
 
   " Sort by total changes in descending order
-  call sort(l:combined_changes, {a, b -> b['total'] - a['total']})
+  call sort(combined_changes, {a, b -> b['total'] - a['total']})
 
-  let l:scope_options = []
-  let l:counter = 1
-  for item in l:combined_changes
-    let l:filename = item['filename']
-    let l:filename = fnamemodify(item['filename'], ':t')
-    let l:filename = substitute(l:filename, '^\.', '', '')
-    let l:filename = substitute(l:filename, '\..\+$', '', '')
-    if l:filename == ""
+  let scope_options = []
+  let counter = 1
+  for item in combined_changes
+    let filename = item['filename']
+    let filename = fnamemodify(item['filename'], ':t')
+    let filename = substitute(filename, '^\.', '', '')
+    let filename = substitute(filename, '\..\+$', '', '')
+    if filename == ""
       continue
     endif
-    let l:numbered_filename = printf("%d. %s", l:counter, l:filename)
-    call add(l:scope_options, l:numbered_filename)
-    let l:counter += 1
-    if l:counter > 9
+    let numbered_filename = printf("%d. %s", counter, filename)
+    call add(scope_options, numbered_filename)
+    let counter += 1
+    if counter > 9
       break
     endif
   endfor
 
   " Get the user's input from the scope dialog
   execute 'redraw'
-  let l:scope_choice = inputlist(['Add scope (<Enter> for custom or skip):'] + l:scope_options)
-  let l:scope = ""
-  if l:scope_choice > 0
-    let l:scope = strpart(l:scope_options[l:scope_choice - 1], 3)
+  let scope_choice = inputlist(['Add scope (<Enter> for custom or skip):'] + scope_options)
+  let scope = ""
+  if scope_choice > 0
+    let scope = strpart(scope_options[scope_choice - 1], 3)
   else
-    let l:scope = input('Add custom scope (<Enter> to skip): ', "")
+    let scope = input('Add custom scope (<Enter> to skip): ', "")
   endif
 
   " Check if a valid choice was made (non-zero index)
-  if l:scope != ""
-    let l:commit_msg = l:commit_msg . '(' . l:scope . ')'
+  if scope != ""
+    let commit_msg = commit_msg . '(' . scope . ')'
   endif
 
   " Get the user's choice from the breaking change confirm dialog
   execute 'redraw'
-  let l:break_options = ["&Yes", "&No"]
-  let l:break_choice = confirm('Breaking change? (<Enter> for No)', join(l:break_options, "\n"), &ic ? 0 : 4)
+  let break_options = ["&Yes", "&No"]
+  let break_choice = confirm('Breaking change? (<Enter> for No)', join(break_options, "\n"), &ic ? 0 : 4)
   " Check if a valid choice was made (non-zero index)
-  if l:break_choice == 1
-    let l:commit_msg = l:commit_msg . '!'
+  if break_choice == 1
+    let commit_msg = commit_msg . '!'
   endif
 
-  let l:commit_msg = l:commit_msg . ': '
-  return l:commit_msg
+  let commit_msg = commit_msg . ': '
+  return commit_msg
 endfunction
