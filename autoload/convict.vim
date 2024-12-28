@@ -3,41 +3,39 @@ if exists('g:autoloaded_convict')
 endif
 let g:autoloaded_convict = 1
 
-function! convict#Commit() abort
-  if !(line('.') ==# 1 && col('.') ==# 1)
-    return ''
-  endif
+let s:type_options = [
+      \'1. fix: A bug fix. Correlates with PATCH in SemVer',
+      \'2. feat: A new feature. Correlates with MINOR in SemVer',
+      \'3. docs: Documentation only changes',
+      \'4. style: Changes that do not affect the meaning of the code',
+      \'5. refactor: A code change that neither fixes a bug nor adds a feature',
+      \'6. perf: A code change that improves performance',
+      \'7. test: Adding missing or correcting existing tests',
+      \'8. build: Changes that affect the build system or external dependencies',
+      \'9. ci: Changes to CI configuration files and scripts',
+      \]
 
-  let l:commit_msg = ''
 
+function! s:SelectType(type_options) abort
+  let commit_type = ''
   " Get the user's choice from the type confirm dialog
-  let l:type_options = [
-        \'1. fix: A bug fix. Correlates with PATCH in SemVer',
-        \'2. feat: A new feature. Correlates with MINOR in SemVer',
-        \'3. docs: Documentation only changes',
-        \'4. style: Changes that do not affect the meaning of the code',
-        \'5. refactor: A code change that neither fixes a bug nor adds a feature',
-        \'6. perf: A code change that improves performance',
-        \'7. test: Adding missing or correcting existing tests',
-        \'8. build: Changes that affect the build system or external dependencies',
-        \'9. ci: Changes to CI configuration files and scripts',
-        \]
-
-  let l:type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + l:type_options)
+  let type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + a:type_options)
+  execute 'redraw'
   " Check if a valid choice was made (non-zero index)
-  if l:type_choice > 0
+  if type_choice > 0
     " Return the selected commit type
-    let l:commit_type = substitute(l:type_options[l:type_choice - 1], '\d\+\.\s\(\w\+\):.*', '\1', "")
-    let l:commit_msg = l:commit_msg . l:commit_type
-  else
-    " Cancel if no commit type is selected
-    return ''
+    let commit_type = a:type_options[type_choice - 1]
+    let commit_type = substitute(commit_type, '\d\+\.\s\(\w\+\):.*', '\1', "")
   endif
+  return commit_type
+endfunction
 
-  let l:numstat = systemlist('git diff --staged --numstat')
-  let l:file_changes = {}
-  let l:dir_changes = {}
-  for line in l:numstat
+
+function! s:GetPathChangesListFromGit() abort
+  let numstat = systemlist('git diff --staged --numstat')
+  let file_changes = {}
+  let dir_changes = {}
+  for line in numstat
     let [added, deleted, filepath] = split(line, '\s\+', 1)
     let changes = str2nr(added) + str2nr(deleted)
 
@@ -47,69 +45,90 @@ function! convict#Commit() abort
     endif
 
     " Add changes to the file
-    let l:file_changes[filepath] = get(l:file_changes, filepath, 0) + changes
+    let file_changes[filepath] = get(file_changes, filepath, 0) + changes
 
     " Aggregate changes for directories
     let dir = fnamemodify(filepath, ':h')
     if dir != ""
-      let l:dir_changes[dir] = get(l:dir_changes, dir, 0) + changes
+      let dir_changes[dir] = get(dir_changes, dir, 0) + changes
     endif
   endfor
 
   " Combine files and directories into a single list
-  let l:combined_changes = []
-  for [name, changes] in items(l:file_changes)
-    call add(l:combined_changes, {'filename': name, 'total': changes})
+  let combined_changes = []
+  for [name, changes] in items(file_changes)
+    call add(combined_changes, {'filename': name, 'total': changes})
   endfor
-  for [name, changes] in items(l:dir_changes)
-    call add(l:combined_changes, {'filename': name, 'total': changes})
+  for [name, changes] in items(dir_changes)
+    call add(combined_changes, {'filename': name, 'total': changes})
   endfor
 
   " Sort by total changes in descending order
-  call sort(l:combined_changes, {a, b -> b['total'] - a['total']})
+  call sort(combined_changes, {a, b -> b['total'] - a['total']})
+  return combined_changes
+endfunction
 
-  let l:scope_options = []
-  let l:counter = 1
-  for item in l:combined_changes
-    let l:filename = item['filename']
-    let l:filename = fnamemodify(item['filename'], ':t')
-    let l:filename = substitute(l:filename, '^\.', '', '')
-    let l:filename = substitute(l:filename, '\..\+$', '', '')
-    if l:filename == ""
+
+function! s:GetScopeOptions(combined_changes) abort
+  let scope_options = []
+  let counter = 1
+  for item in a:combined_changes
+    let filename = item['filename']
+    let filename = fnamemodify(item['filename'], ':t')
+    let filename = substitute(filename, '^\.', '', '')
+    let filename = substitute(filename, '\..\+$', '', '')
+    if filename == ""
       continue
     endif
-    let l:numbered_filename = printf("%d. %s", l:counter, l:filename)
-    call add(l:scope_options, l:numbered_filename)
-    let l:counter += 1
-    if l:counter > 9
+    let numbered_filename = printf("%d. %s", counter, filename)
+    call add(scope_options, numbered_filename)
+    let counter += 1
+    if counter > 9
       break
     endif
   endfor
+  return scope_options
+endfunction
 
-  " Get the user's input from the scope dialog
+
+function! s:SelectScope(scope_options) abort
+  let scope_choice = inputlist(['Add scope (<Enter> for custom or skip):'] + a:scope_options)
   execute 'redraw'
-  let l:scope_choice = inputlist(['Add scope (<Enter> for custom or skip):'] + l:scope_options)
-  let l:scope = ""
-  if l:scope_choice > 0
-    let l:scope = strpart(l:scope_options[l:scope_choice - 1], 3)
+  let scope = ""
+  if scope_choice > 0
+    let scope = strpart(a:scope_options[scope_choice - 1], 3)
   else
-    let l:scope = input('Add custom scope (<Enter> to skip): ', "")
+    let scope = input('Add custom scope (<Enter> to skip): ', "")
+  endif
+  return scope
+endfunction
+
+
+function! convict#Commit() abort
+  if !(line('.') ==# 1 && col('.') ==# 1)
+    return ''
   endif
 
-  " Check if a valid choice was made (non-zero index)
-  if l:scope != ""
-    let l:commit_msg = l:commit_msg . '(' . l:scope . ')'
+  let commit_type = s:SelectType(s:type_options)
+  if commit_type == ''
+    return ''
+  end
+  let commit_msg = commit_type
+
+
+  let path_changes = s:GetPathChangesListFromGit()
+  let scope_options = s:GetScopeOptions(path_changes)
+  let scope = s:SelectScope(scope_options)
+  if scope != ""
+    let commit_msg = commit_msg . '(' . scope . ')'
   endif
 
-  " Get the user's choice from the breaking change confirm dialog
-  execute 'redraw'
-  let l:break_options = ["&Yes", "&No"]
-  let l:break_choice = confirm('Breaking change? (<Enter> for No)', join(l:break_options, "\n"), &ic ? 0 : 4)
-  " Check if a valid choice was made (non-zero index)
-  if l:break_choice == 1
-    let l:commit_msg = l:commit_msg . '!'
+  let break_options = ["&Yes", "&No"]
+  let break_choice = confirm('Breaking change? (<Enter> for No)', join(break_options, "\n"), &ic ? 0 : 4)
+  if break_choice == 1
+    let commit_msg = commit_msg . '!'
   endif
 
-  let l:commit_msg = l:commit_msg . ': '
-  return l:commit_msg
+  let commit_msg = commit_msg . ': '
+  return commit_msg
 endfunction
