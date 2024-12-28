@@ -29,7 +29,8 @@ function! s:SelectType(type_options) abort
   return commit_type
 endfunction
 
-function! s:GetScopeOptions() abort
+
+function! s:GetPathChangesListFromGit() abort
   let numstat = systemlist('git diff --staged --numstat')
   let file_changes = {}
   let dir_changes = {}
@@ -63,10 +64,14 @@ function! s:GetScopeOptions() abort
 
   " Sort by total changes in descending order
   call sort(combined_changes, {a, b -> b['total'] - a['total']})
+  return combined_changes
+endfunction
 
+
+function! s:GetScopeOptions(combined_changes) abort
   let scope_options = []
   let counter = 1
-  for item in combined_changes
+  for item in a:combined_changes
     let filename = item['filename']
     let filename = fnamemodify(item['filename'], ':t')
     let filename = substitute(filename, '^\.', '', '')
@@ -86,7 +91,6 @@ endfunction
 
 
 function! s:SelectScope(scope_options) abort
-  " Get the user's input from the scope dialog
   execute 'redraw'
   let scope_choice = inputlist(['Add scope (<Enter> for custom or skip):'] + a:scope_options)
   let scope = ""
@@ -110,7 +114,9 @@ function! convict#Commit() abort
   end
   let commit_msg = commit_type
 
-  let scope_options = s:GetScopeOptions()
+
+  let path_changes = s:GetPathChangesListFromGit()
+  let scope_options = s:GetScopeOptions(path_changes)
   let scope = s:SelectScope(scope_options)
   if scope != ""
     let commit_msg = commit_msg . '(' . scope . ')'
