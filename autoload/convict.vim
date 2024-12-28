@@ -16,7 +16,7 @@ let s:type_options = [
       \]
 
 
-function! s:SelectCommitType() abort
+function! s:SelectType() abort
   let commit_type = ''
   " Get the user's choice from the type confirm dialog
   let type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + s:type_options)
@@ -101,7 +101,7 @@ function! convict#Commit() abort
     return ''
   endif
 
-  let commit_type = s:SelectCommitType()
+  let commit_type = s:SelectType()
   if commit_type == ''
     return ''
   end
