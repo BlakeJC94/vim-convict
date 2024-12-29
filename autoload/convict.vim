@@ -120,26 +120,31 @@ function! convict#Commit() abort
     return ''
   endif
 
-  let commit_type = s:SelectType(s:type_options)
-  if commit_type == ''
-    return ''
-  end
-  let commit_msg = commit_type
+  let commit_msg = ''
+  try
+    let commit_type = s:SelectType(s:type_options)
+    if commit_type == ''
+      return ''
+    end
+    let commit_msg = commit_msg . commit_type
 
+    let path_changes = s:GetPathChangesListFromGit()
+    let scope_options = s:GetScopeOptions(path_changes)
+    let scope = s:SelectScope(scope_options)
+    if scope != ""
+      let commit_msg = commit_msg . '(' . scope . ')'
+    endif
 
-  let path_changes = s:GetPathChangesListFromGit()
-  let scope_options = s:GetScopeOptions(path_changes)
-  let scope = s:SelectScope(scope_options)
-  if scope != ""
-    let commit_msg = commit_msg . '(' . scope . ')'
-  endif
+    let break_options = ["&Yes", "&No"]
+    let break_choice = confirm('Breaking change? (<Enter> for No)', join(break_options, "\n"), &ic ? 0 : 4)
+    if break_choice == 1
+      let commit_msg = commit_msg . '!'
+    endif
 
-  let break_options = ["&Yes", "&No"]
-  let break_choice = confirm('Breaking change? (<Enter> for No)', join(break_options, "\n"), &ic ? 0 : 4)
-  if break_choice == 1
-    let commit_msg = commit_msg . '!'
-  endif
-
-  let commit_msg = commit_msg . ': '
+    let commit_msg = commit_msg . ': '
+  catch /Vim\%((\a\+)\)\=:E/
+    echo "An error occurred: " . v:exception
+    echo "Occurred at: " . v:throwpoint
+  endtry
   return commit_msg
 endfunction
