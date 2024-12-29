@@ -15,14 +15,23 @@ let s:type_options = [
       \'9. ci: Changes to CI configuration files and scripts',
       \]
 
+function! s:SelectionIsValidNumber(choice, options) abort
+  return a:choice =~ '^\d\+$' && a:choice >= 1 && a:choice <= len(a:options)
+endfunction
+
 
 function! s:SelectType(type_options) abort
   let commit_type = ''
   " Get the user's choice from the type confirm dialog
-  let type_choice = inputlist(['Choose commit type (<Esc> to cancel):'] + a:type_options)
+  let menu = "Choose commit type\n"
+  for type_option in a:type_options
+    let menu .= printf("%s\n", type_option)
+  endfor
+  let full_prompt = menu . "Type number and <Enter> (empty cancels): "
+  let type_choice = input(full_prompt)
   execute 'redraw'
   " Check if a valid choice was made (non-zero index)
-  if type_choice > 0
+  if s:SelectionIsValidNumber(type_choice, a:type_options)
     " Return the selected commit type
     let commit_type = a:type_options[type_choice - 1]
     let commit_type = substitute(commit_type, '\d\+\.\s\(\w\+\):.*', '\1', "")
@@ -92,13 +101,15 @@ endfunction
 
 
 function! s:SelectScope(scope_options) abort
-  let scope_choice = inputlist(['Add scope (<Enter> for custom or skip):'] + a:scope_options)
+  let menu = "Select scope\n"
+  for scope_option in a:scope_options
+    let menu .= printf("%s\n", scope_option)
+  endfor
+  let full_prompt = menu . "Type number or custom value and <Enter> (empty omits scope): "
+  let scope = input(full_prompt)
   execute 'redraw'
-  let scope = ""
-  if scope_choice > 0
-    let scope = strpart(a:scope_options[scope_choice - 1], 3)
-  else
-    let scope = input('Add custom scope (<Enter> to skip): ', "")
+  if s:SelectionIsValidNumber(scope, a:scope_options)
+    let scope = strpart(a:scope_options[scope - 1], 3)
   endif
   return scope
 endfunction
