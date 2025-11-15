@@ -116,6 +116,10 @@ endfunction
 
 
 function! convict#Commit() abort
+  if !exists(':Git')
+    finish
+  endif
+
   if !(line('.') ==# 1 && col('.') ==# 1)
     return ''
   endif
